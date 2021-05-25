@@ -16,30 +16,6 @@ def main():
         run_env_2()
 
 
-def run_env_1():
-    env = Environment()
-    env.load_world('maze1.txt')
-
-    agent = Agent(env)
-
-    agent.interact('stay')
-    agent.interact('up')
-    agent.interact('down')
-    agent.interact('right')
-    agent.interact('right')
-    agent.interact('right')
-    agent.interact('right')
-    agent.interact('right')
-    agent.interact('up')
-    agent.interact('left')
-
-    env.plot_log()
-    env.reset()
-
-    agent.interact('stay')
-    agent.test_aa()
-
-
 def run_env_2():
     # Set up trial:
     dog_day = 10000
