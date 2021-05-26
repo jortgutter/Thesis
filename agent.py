@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Agent:
-    def __init__(self, env, modality_weights):
+    def __init__(self, env, modality_weights, saliences):
         self.env = env
 
         self.n_states = 3
@@ -31,11 +31,8 @@ class Agent:
             ]
         )
 
-        self.state_visits = np.array(
-            [3, 3, 3]
-        )
-
-        self.dog_multiplier = 500
+        # salience per outcome:
+        self.saliences = saliences
 
         # Predicted modality values per state:
         self.pred_outcome_given_state_per_modality = np.array(
@@ -68,9 +65,6 @@ class Agent:
         )
 
         # importance of each modality:
-        #self.modality_weights = np.array(
-        #    [0.334, 0.333, 0.333]
-        #)
         self.modality_weights = np.array(modality_weights)
 
     def run(self, n_moves):
@@ -84,14 +78,10 @@ class Agent:
         self.update_predicted_outcomes(observation, action)
 
     def update_predicted_outcomes(self, observation, state):
-        observation_weight = 1
-        if observation[1] == 2:
-            observation_weight = self.dog_multiplier
         # update counts of observations:
         for i in range(self.n_modalities):
-            self.counts[i, state, observation[i]] += observation_weight
-        # update counts of visited states:
-        self.state_visits[state] += observation_weight
+            self.counts[i, state, observation[i]] += self.saliences[observation[i]]
+
         for i in range(self.n_modalities):
             # Normalize counts to probability distribution:
             self.pred_outcome_given_state_per_modality[i] = self.counts[i] / np.sum(self.counts[i], axis=1)[:, None]

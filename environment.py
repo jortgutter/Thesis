@@ -2,7 +2,7 @@ import numpy as np
 
 
 class Environment:
-    def __init__(self, dog_day):
+    def __init__(self, dog_day, dog_modalities):
 
         # Means of observations per modality per state
         self.probabilities = np.array(
@@ -31,6 +31,9 @@ class Environment:
         # day of actual dog encounter
         self.dog_encounter_day = -1
 
+        # number of modalities affected by the dog encounter:
+        self.dog_modalities = dog_modalities
+
         # Boolean to keep track of dog encounter
         self.has_had_dog_day = False
 
@@ -46,11 +49,14 @@ class Environment:
     def act(self, action):
         observation = np.array([np.random.choice(3, p=self.probabilities[mod][action]) for mod in range(3)])
         if self.days >= self.dog_day and action == self.dog_street and not self.has_had_dog_day:
-            observation = [2, 2, 2]
+            #observation = [2, 2, 2]
+            for i in range(self.dog_modalities):
+                observation[i] = 2
             self.has_had_dog_day = True
             self.dog_encounter_day = self.days
             print("Oh no, a dog! scary!")
             print("action taken:", action)
+            print("observation:", observation)
         self.days += 1
         self.log.append(action)
         return observation
