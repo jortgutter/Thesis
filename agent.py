@@ -37,7 +37,6 @@ class Agent:
 
         self.dog_multiplier = 500
 
-
         # Predicted modality values per state:
         self.pred_outcome_given_state_per_modality = np.array(
             [
@@ -64,7 +63,7 @@ class Agent:
             [
                 [0.9, 0.0999, 0.00001],
                 [0.9, 0.0999, 0.00001],
-                [0.8, 0.1999, 0.00001]
+                [0.9, 0.0999, 0.00001]
             ]
         )
 
@@ -73,6 +72,11 @@ class Agent:
         #    [0.334, 0.333, 0.333]
         #)
         self.modality_weights = np.array(modality_weights)
+
+    def run(self, n_moves):
+        for i in range(n_moves):
+            self.act()
+        return self.env.report()
 
     def act(self):
         action = self.best_policy()
@@ -88,8 +92,9 @@ class Agent:
             self.counts[i, state, observation[i]] += observation_weight
         # update counts of visited states:
         self.state_visits[state] += observation_weight
-        for m in range(self.n_modalities):
-            self.pred_outcome_given_state_per_modality[m] = (self.counts[m].T/self.state_visits).T
+        for i in range(self.n_modalities):
+            # Normalize counts to probability distribution:
+            self.pred_outcome_given_state_per_modality[i] = self.counts[i] / np.sum(self.counts[i], axis=1)[:, None]
 
     def best_policy(self):
         # Calculate qualities of actions:

@@ -9,6 +9,31 @@ def main():
     run_experiments()
 
 
+def vary_modalities():
+    dog_day = 5000
+    n_days = 20000
+
+    modality_weights = np.array(
+        [
+            [1.0, 0.0, 0.0],            # one modality
+            [0.5, 0.5, 0.0],            # two modalities
+            [0.3334, 0.3333, 0.3333]       # three modalities
+        ]
+    )
+
+    # Run experiments:
+    for i in range(3):
+
+        # Setup environment:
+        env = Environment(dog_day=dog_day)
+
+        # Setup agent:
+        agent = Agent(env=env, modality_weights=modality_weights[i])
+
+        # Run agent:
+        results = agent.run(n_moves=n_days)
+
+
 def run_experiments():
     # Set up trial:
     dog_day = 10000
@@ -19,7 +44,7 @@ def run_experiments():
     modality_weights_three = [0.334, 0.333, 0.333]
 
     env = Environment(dog_day)
-    agent = Agent(env, modality_weights=modality_weights_three)
+    agent = Agent(env=env, modality_weights=modality_weights_three)
 
     # Run a trial of n moves:
     for i in range(n_moves):

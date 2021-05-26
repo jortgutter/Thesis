@@ -13,14 +13,14 @@ class Environment:
                     [0.3, 0.7, 0]   # state 2
                 ],
                 [  # mod 1
-                    [0.5, 0.5, 0],
+                    [0.6, 0.4, 0],
                     [0.9, 0.1, 0],
-                    [0.5, 0.5, 0]
+                    [0.3, 0.7, 0]
                 ],
                 [  # mod 2
-                    [0.5, 0.5, 0],
-                    [0.8, 0.2, 0],
-                    [0.6, 0.4, 0]
+                    [0.6, 0.4, 0],
+                    [0.9, 0.1, 0],
+                    [0.3, 0.7, 0]
                 ]
             ]
         )
@@ -56,4 +56,4 @@ class Environment:
         return observation
 
     def report(self):
-        return self.log, self.dog_encounter_day
+        return {"log": self.log, "dog_encounter": self.dog_encounter_day}
