@@ -54,9 +54,9 @@ class Environment:
                 observation[i] = 2
             self.has_had_dog_day = True
             self.dog_encounter_day = self.days
-            print("Oh no, a dog! scary!")
-            print("action taken:", action)
-            print("observation:", observation)
+            # print("Oh no, a dog! scary!")
+            # print("action taken:", action)
+            # print("observation:", observation)
         self.days += 1
         self.log.append(action)
         return observation

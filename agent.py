@@ -4,8 +4,10 @@ import numpy as np
 
 
 class Agent:
-    def __init__(self, env, modality_weights, saliences):
+    def __init__(self, env, modality_weights, saliences, n_moves):
         self.env = env
+
+        self.n_moves = n_moves
 
         self.n_states = 3
         self.n_modalities = 3
@@ -67,11 +69,6 @@ class Agent:
         # importance of each modality:
         self.modality_weights = np.array(modality_weights)
 
-    def run(self, n_moves):
-        for i in range(n_moves):
-            self.act()
-        return self.env.report()
-
     def act(self):
         action = self.best_policy()
         observation = np.array(self.env.act(action))
@@ -130,3 +127,8 @@ class Agent:
     def softmax(self, x):
         f_x = np.exp(x) / np.sum(np.exp(x))
         return f_x
+
+    def run(self):
+        for i in range(self.n_moves):
+            self.act()
+        return self.env.report()
