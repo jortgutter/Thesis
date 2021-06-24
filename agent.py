@@ -4,13 +4,18 @@ import numpy as np
 
 class Agent:
     def __init__(self, env, modality_weights, saliences, n_moves, deterministic=True):
+        # Reference to the environment:
         self.env = env
 
+        # Number of iterations:
         self.n_moves = n_moves
 
+        # Number of possible states:
         self.n_states = 3
+        # Number of sensory modalities:
         self.n_modalities = 3
 
+        # Boolean indicating whether actions are deterministic:
         self.deterministic = deterministic
 
         # Observation counters per state per modality:
