@@ -13,7 +13,34 @@ def main():
     # run_experiments()
     # vary_dog_modalities()
     # vary_dog_day()
-    vary_salience()
+    # vary_salience()
+    control()
+
+
+def control():
+    n_days = 50000
+    dog_day = 50000
+    n_runs = 100
+    modality_weights = [0.3334, 0.3333, 0.3333]
+    results = []
+    saliences = np.array([1, 1, 1])
+    p_bar = tqdm(total=n_runs)
+
+    agents = []
+
+    for i in range(n_runs):
+        env = Environment(dog_day=dog_day, dog_modalities=3)
+        agent = Agent(env=env, modality_weights=modality_weights, saliences=saliences, n_moves=n_days)
+        agents.append(agent)
+
+    with Pool(processes=N_PROCESSES) as pool:
+        sim_results = pool.map(run_agent, agents)
+        results.append(sim_results)
+        p_bar.update(1)
+
+    p_bar.close()
+
+    pickle_this(results, "control")
 
 
 def vary_salience():
@@ -144,7 +171,7 @@ def vary_dog_modalities():
     p_bar.close()
 
     # Store results to file:
-    pickle_this(all_results, "first_try")
+    pickle_this(all_results, "vary_dog_modalities")
 
 
 def run_agent(agent):
@@ -197,11 +224,17 @@ def run_experiments():
     modality_weights_three = [0.334, 0.333, 0.333]
 
     env = Environment(dog_day, dog_modalities=dog_modalities)
-    agent = Agent(env=env, modality_weights=modality_weights_three, saliences=saliences)
+    agent = Agent(env=env, modality_weights=modality_weights_three, saliences=saliences, n_moves=n_moves, deterministic=False)
 
     # Run a trial of n moves:
     for i in range(n_moves):
         agent.act()
+
+    epist_vals = np.array(agent.epistemic_log)
+    plt.plot(epist_vals[:, 0])
+    plt.plot(epist_vals[:, 1])
+    plt.plot(epist_vals[:, 2])
+    plt.show()
 
     # Collect results:
     report = env.report()

@@ -4,13 +4,15 @@ import numpy as np
 
 
 class Agent:
-    def __init__(self, env, modality_weights, saliences, n_moves):
+    def __init__(self, env, modality_weights, saliences, n_moves, deterministic=True):
         self.env = env
 
         self.n_moves = n_moves
 
         self.n_states = 3
         self.n_modalities = 3
+
+        self.deterministic = deterministic
 
         # Observation counters per state per modality:
         self.counts = np.array(
@@ -69,8 +71,20 @@ class Agent:
         # importance of each modality:
         self.modality_weights = np.array(modality_weights)
 
+        # Keep track of qualities over time:
+        self.q_log = []
+
+        self.epistemic_log = []
+        self.epist_vals = []
+        self.curr_action = 0
+
     def act(self):
         action = self.best_policy()
+        if not self.deterministic:
+            action_probabilities = np.zeros(self.n_states) + 0.1
+            action_probabilities[action] = 0.8
+            action = np.random.choice(self.n_states, p=action_probabilities)
+
         observation = np.array(self.env.act(action))
         self.update_predicted_outcomes(observation, action)
 
@@ -83,12 +97,20 @@ class Agent:
             # Normalize counts to probability distribution:
             self.pred_outcome_given_state_per_modality[i] = self.counts[i] / np.sum(self.counts[i], axis=1)[:, None]
 
+            # dirichlet:
+            #for m in range(self.n_modalities):
+            #    for s in range(self.n_states):
+            #        self.pred_outcome_given_state_per_modality[i, s] = np.random.dirichlet(self.counts[m, s])
+
     def best_policy(self):
         # Calculate qualities of actions:
         qs = [self.softmax(np.array([self.quality(action, modality) for action in range(self.n_states)])) for modality in range(self.n_modalities)]
 
         # Weigh the qualities of all modalities:
         qualities = np.dot(self.modality_weights, np.array(qs))
+
+        # Log qualities:
+        self.q_log.append(qualities)
 
         # Draw action from the qualities:
         take_action = np.random.choice(self.n_states, p=qualities)
@@ -110,8 +132,11 @@ class Agent:
         return ext_val
 
     def epistemic(self, pred_outcome, act, mod):
-        pred_state = np.zeros(3)
-        pred_state[act] = 1
+        pred_state = np.zeros(3) + 0.1
+        pred_state[act] = 0.8
+        if self.deterministic:
+            pred_state = np.zeros(3)
+            pred_state[act] = 1
 
         posterior = np.multiply(pred_state, self.pred_outcome_given_state_per_modality[mod].T)
 
@@ -122,6 +147,16 @@ class Agent:
         # Calculate the expected entropy
         pred = pred_state * np.ones(posterior.shape)
         exp_ent = np.sum(pred_outcome * entropy(qk=pred, pk=posterior, axis=1))
+
+        # following code is test code:
+        if mod == 0:
+            if self.curr_action == 3:
+                self.epistemic_log.append(self.epist_vals)
+                self.epist_vals = []
+                self.curr_action = 0
+            self.epist_vals.append(exp_ent)
+            self.curr_action += 1
+        # end of test code
         return exp_ent
 
     def softmax(self, x):
@@ -131,4 +166,6 @@ class Agent:
     def run(self):
         for i in range(self.n_moves):
             self.act()
-        return self.env.report()
+        env_report = self.env.report()
+        env_report["q_log"] = self.q_log
+        return env_report

@@ -4,9 +4,10 @@ import numpy as np
 
 
 def main():
-    #plot_dog_modalities()
-    #plot_dog_day()
-    plot_dog_salience()
+    plot_dog_modalities()
+    # plot_dog_day()
+    # plot_dog_salience()
+    #plot_control()
 
 
 def unpickle_this(filename):
@@ -15,9 +16,20 @@ def unpickle_this(filename):
     f.close()
     return data
 
+def plot_control():
+    data = np.array(unpickle_this("control"))
+    for i in range(100):
+        print(data[i])
+
+
 
 def plot_dog_salience():
-    data = np.array(unpickle_this("vary_dog_salience_linear"))
+    exponential = False
+    data = None
+    if exponential:
+        data = np.array(unpickle_this("vary_dog_salience_exponential"))
+    else:
+        data = np.array(unpickle_this("vary_dog_salience_linear"))
     avgs_after_dog_day = []
 
     bin_size = 200
@@ -43,11 +55,37 @@ def plot_dog_salience():
         all_avgs_before.append(avgs_before)
         all_avgs_after.append(avgs_after)
 
-    plt.plot(np.mean(all_avgs_before, axis=1), alpha=1)
-    plt.plot(np.mean(all_avgs_after, axis=1), alpha=1)
-    plt.legend(["Visits before dog encounter", "Visits after dog encounter"])
-    plt.xlabel("Salience of seeing dog (2^x)")
+    all_avgs_after = np.array(all_avgs_after)
+    all_avgs_before = np.array(all_avgs_before)
+
+    x = None
+    if exponential:
+        x = range(n_experiments)
+    else:
+        x = np.multiply(range(n_experiments), 50)
+
+    for i in range(20):
+        plt.scatter(x,  all_avgs_before[:,i], alpha=0.1, color="blue")
+        plt.scatter(x, all_avgs_after[:,i], alpha=0.1, color="orange")
+        if i == 0:
+            plt.scatter(x, np.mean(all_avgs_before, axis=1), alpha=1,  color="blue", label="Before dog-day")
+            plt.scatter(x, np.mean(all_avgs_after, axis=1), alpha=1,  color="orange", label="After dog-day")
+        else:
+            plt.scatter(x, np.mean(all_avgs_before, axis=1), alpha=1, color="blue")
+            plt.scatter(x, np.mean(all_avgs_after, axis=1), alpha=1, color="orange")
+    plt.legend()
+    plt.xlabel("Salience of seeing dog")
     plt.ylabel("Percentage of visits to dog state")
+    plt.title("Percentage of performing action 1,\n over 200 days before and 200 days after dog-day \n as a function of salience")
+    plt.show()
+
+    plt.scatter(np.multiply(range(n_experiments), 50), np.mean(all_avgs_before, axis=1), alpha=1)
+    plt.scatter(np.multiply(range(n_experiments), 50), np.mean(all_avgs_after, axis=1), alpha=1)
+
+
+    plt.legend(["Visits before dog encounter", "Visits after dog encounter"])
+    plt.xlabel("Salience of seeing dog")
+    plt.ylabel("Percentage of action 1")
     plt.title("Percentage of visits to the dog state out of all actions,\n over 200 days before and 200 days after dog encounter for different saliences")
     plt.show()
 
@@ -84,6 +122,22 @@ def plot_dog_day():
 
     plot_colors = ["maroon", "red", "orange", "yellow", "greenyellow", "green", "aqua", "blue", "darkviolet", "magenta", ]
 
+    mean_qualities = np.array([[data[i][j]["q_log"] for j in range(10)] for i in range(10)])
+    print(mean_qualities.shape)
+    fig, ax = plt.subplots(1, 3)
+    for i in range(3):
+        for j in range(10):
+            for k in range(10):
+                ax[i].plot(mean_qualities[j, k, :, i], color=plot_colors[j], alpha=0.2)
+            ax[i].plot(np.mean(np.array(mean_qualities)[j, :, :, i], axis=0), color=plot_colors[j], label="dd: "+str(j*2000))
+    ax[2].legend()
+    ax[0].set_ylabel("quality")
+    for i in range(3):
+        ax[i].set_title("action "+str(i))
+    ax[1].set_xlabel("time (days)")
+    plt.suptitle("Qualities per action over time with varying 'dog day' (dd)")
+    plt.show()
+
     for i in range(10):
         partial_data = data[i]
         partial_running_avg = []
@@ -114,8 +168,7 @@ def plot_dog_day():
 
 
 def plot_dog_modalities():
-    data = unpickle_this("first_try")
-    print(data)
+    data = unpickle_this("vary_dog_modalities")
     bin_size = 100
 
     running_avgs = [
@@ -133,6 +186,27 @@ def plot_dog_modalities():
     ]
 
     plot_colors = ["red", "green", "blue", "orange"]
+
+    mean_qualities = np.array([[data[i][j]["q_log"] for j in range(10)] for i in range(4)])
+    print(mean_qualities.shape)
+    fig, ax = plt.subplots(1, 3)
+    for i in range(3):
+
+        for j in range(4):
+            if j ==0:
+                for k in range(10):
+                    ax[i].plot(mean_qualities[j, k, :, i], color=plot_colors[j], alpha=0.2)
+                ax[i].plot(np.mean(np.array(mean_qualities)[j, :, :, i], axis=0), color=plot_colors[j],
+                           label=str(j) + "/3 exposed modalities")
+    #ax[2].legend()
+    ax[0].set_ylabel("quality")
+    for i in range(3):
+        ax[i].set_title("action " + str(i))
+    ax[1].set_xlabel("time (days)")
+    #plt.suptitle("Qualities per action over time while varying the number of sensory modalities exposed to the dog encounter")
+    plt.suptitle("Qualities per action over time without a dog encounter")
+    plt.show()
+
 
     for i in range(4):
         partial_data = data[i]
