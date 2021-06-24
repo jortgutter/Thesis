@@ -13,8 +13,8 @@ def main():
     # run_experiments()
     # vary_dog_modalities()
     # vary_dog_day()
-    # vary_salience()
-    control()
+    vary_salience()
+    # control()
 
 
 def control():
@@ -62,7 +62,7 @@ def vary_salience():
 
     p_bar = tqdm(total=n_runs)
 
-    for i in range(n_experiments):  # loop over possible dog days
+    for i in range(n_experiments):  # loop over experiments
         # Setup all agents:
         agents = []
         for j in range(runs_per_experiment):
@@ -201,10 +201,10 @@ def vary_modalities():
         env = Environment(dog_day=dog_day, dog_modalities=dog_modalities)
 
         # Setup agent:
-        agent = Agent(env=env, modality_weights=modality_weights[i], saliences=saliences)
+        agent = Agent(env=env, modality_weights=modality_weights[i], saliences=saliences, n_moves=n_days)
 
         # Run agent:
-        results = agent.run(n_moves=n_days)
+        results = agent.run()
 
 
 def run_experiments():

@@ -47,19 +47,22 @@ class Environment:
         self.log = []
 
     def act(self, action):
+        """Generates an observation based on an action"""
+        # Generate observations based on the action:
         observation = np.array([np.random.choice(3, p=self.probabilities[mod][action]) for mod in range(3)])
+        # Check for dog encounter:
         if self.days >= self.dog_day and action == self.dog_street and not self.has_had_dog_day:
-            #observation = [2, 2, 2]
+            # Overwrite outcome with the dog outcome (outcome 2) for each affected modality:
             for i in range(self.dog_modalities):
                 observation[i] = 2
             self.has_had_dog_day = True
             self.dog_encounter_day = self.days
-            # print("Oh no, a dog! scary!")
-            # print("action taken:", action)
-            # print("observation:", observation)
+        # Keep log of the day and action:
         self.days += 1
         self.log.append(action)
+        # Return observations to the agent:
         return observation
 
     def report(self):
+        """Returns the action log"""
         return {"log": self.log, "dog_encounter": self.dog_encounter_day}

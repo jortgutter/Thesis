@@ -7,7 +7,7 @@ def main():
     plot_dog_modalities()
     # plot_dog_day()
     # plot_dog_salience()
-    #plot_control()
+    # plot_control()
 
 
 def unpickle_this(filename):
@@ -20,8 +20,6 @@ def plot_control():
     data = np.array(unpickle_this("control"))
     for i in range(100):
         print(data[i])
-
-
 
 def plot_dog_salience():
     exponential = False

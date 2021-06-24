@@ -1,4 +1,3 @@
-from random import random
 from scipy.stats import entropy
 import numpy as np
 
@@ -79,16 +78,20 @@ class Agent:
         self.curr_action = 0
 
     def act(self):
+        """Generates an action, and interacts with the environment"""
+        # Select an action:
         action = self.best_policy()
         if not self.deterministic:
             action_probabilities = np.zeros(self.n_states) + 0.1
             action_probabilities[action] = 0.8
             action = np.random.choice(self.n_states, p=action_probabilities)
-
+        # Interact with the environment:
         observation = np.array(self.env.act(action))
+        # Update beliefs:
         self.update_predicted_outcomes(observation, action)
 
     def update_predicted_outcomes(self, observation, state):
+        """Updates internal beliefs with the observation"""
         # update counts of observations:
         for i in range(self.n_modalities):
             self.counts[i, state, observation[i]] += self.saliences[observation[i]]
@@ -97,12 +100,8 @@ class Agent:
             # Normalize counts to probability distribution:
             self.pred_outcome_given_state_per_modality[i] = self.counts[i] / np.sum(self.counts[i], axis=1)[:, None]
 
-            # dirichlet:
-            #for m in range(self.n_modalities):
-            #    for s in range(self.n_states):
-            #        self.pred_outcome_given_state_per_modality[i, s] = np.random.dirichlet(self.counts[m, s])
-
     def best_policy(self):
+        """Selects an action based on the qualities of the possible actions"""
         # Calculate qualities of actions:
         qs = [self.softmax(np.array([self.quality(action, modality) for action in range(self.n_states)])) for modality in range(self.n_modalities)]
 
@@ -119,6 +118,7 @@ class Agent:
         return take_action
 
     def quality(self, act, mod):
+        """Calculates the quality of an action"""
         # predicted outcome of modalities given the outcome state when applying action:
         pred_outcome = self.pred_outcome_given_state_per_modality[mod][act]
         # Get the extrinsic and epistemic values for this policy:
@@ -127,45 +127,43 @@ class Agent:
         return ext_val + epist_val
 
     def extrinsic(self, pred_outcome, mod):
+        """Calculates extrinsic value"""
         # calculate extrinsic value of the predicted outcome outcome given internal expected outcome:
         ext_val = np.sum(pred_outcome * np.log(self.expected_outcome_per_modality[mod]))
         return ext_val
 
     def epistemic(self, pred_outcome, act, mod):
+        """Calculates epistemic value as expected entropy"""
         pred_state = np.zeros(3) + 0.1
         pred_state[act] = 0.8
         if self.deterministic:
             pred_state = np.zeros(3)
             pred_state[act] = 1
 
+        # calculate the posterior:
         posterior = np.multiply(pred_state, self.pred_outcome_given_state_per_modality[mod].T)
 
+        # Normalize the posterior:
         post_sum = np.sum(posterior, axis=1)
-
         posterior = posterior / post_sum[:, None]
 
         # Calculate the expected entropy
         pred = pred_state * np.ones(posterior.shape)
         exp_ent = np.sum(pred_outcome * entropy(qk=pred, pk=posterior, axis=1))
 
-        # following code is test code:
-        if mod == 0:
-            if self.curr_action == 3:
-                self.epistemic_log.append(self.epist_vals)
-                self.epist_vals = []
-                self.curr_action = 0
-            self.epist_vals.append(exp_ent)
-            self.curr_action += 1
-        # end of test code
         return exp_ent
 
     def softmax(self, x):
+        """implementation of softmax function"""
         f_x = np.exp(x) / np.sum(np.exp(x))
         return f_x
 
     def run(self):
+        """Runs the agent for n_moves iterations"""
         for i in range(self.n_moves):
+            # Perform an action
             self.act()
+        # return qualities and action log:
         env_report = self.env.report()
         env_report["q_log"] = self.q_log
         return env_report
